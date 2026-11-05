@@ -19,7 +19,8 @@ binaries = (cuda + collect_dynamic_libs("ctranslate2") + collect_dynamic_libs("o
             + collect_dynamic_libs("sherpa_onnx"))
 datas = (collect_data_files("faster_whisper") + collect_data_files("docx") + collect_data_files("pymupdf")
          + [(str(ROOT / "ingeniotec_vox" / "profiles"), "ingeniotec_vox/profiles"),
-            (str(ROOT / "assets"), "assets")])
+            (str(ROOT / "assets"), "assets"),
+            (str(ROOT / "ingeniotec_vox" / "core" / "claude_setup.ps1"), "ingeniotec_vox/core")])
 common = dict(pathex=[str(ROOT)], binaries=binaries, datas=datas,
               hiddenimports=["win32com.client", "pythoncom", "sherpa_onnx", "psutil"],
               excludes=["tkinter", "matplotlib", "torch", "PySide6.QtWebEngineCore",

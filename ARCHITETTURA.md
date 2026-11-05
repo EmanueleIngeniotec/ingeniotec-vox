@@ -95,7 +95,7 @@ Un unico `setup.exe` (Inno Setup, ~3 GB compressi, anche da cartella di rete), c
 | 3 | Profilo "lezione generica", guida 00, controllo impaginazione automatico | Stesso stile L5/L9, nessun box/tabella spezzato |
 | 4 | Diarizzazione e nomi a schermo | Attribuzione corretta su 2 call reali |
 | 5 | GUI PySide6, checkpoint/ripresa, messaggi d'errore, icona e loghi | Utente non tecnico completa un lavoro da solo (GUI fatta, vedi `FASE5.md`) |
-| 6 | Installer, test su 2–3 PC diversi, documentazione, versione | Distribuzione interna |
+| 6 | Installer, test su 2–3 PC diversi, documentazione, versione | Distribuzione interna (setup.exe 0.1.0 fatto e provato qui, vedi `FASE6.md`) |
 
 Ordine scelto per ridurre il rischio: prima il valore (call è più semplice, lezione è più lunga), la GUI solo quando la pipeline è stabile.
 

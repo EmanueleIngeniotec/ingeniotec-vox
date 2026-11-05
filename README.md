@@ -7,7 +7,7 @@ Programma Windows nato per uso interno in Ingeniotec che, da una registrazione v
 
 La trascrizione gira in locale sulla GPU (faster-whisper large-v3): il video non lascia il PC. Testi, scelta delle schermate e verifica delle fonti sono affidati a Claude Code in modalità non interattiva (`claude -p`), con l'abbonamento Claude dell'utente e senza chiavi API. Modello e impegno sono fissati nel programma (Opus, effort medio: `MODEL` ed `EFFORT` in `ingeniotec_vox/core/claude.py`), non presi dalle impostazioni di Claude Code del PC.
 
-> Stato: interfaccia grafica e riga di comando (Fasi 0–5). L'installer è previsto nella Fase 6 (vedi [ARCHITETTURA.md](ARCHITETTURA.md)).
+> Stato: versione 0.1.0, interfaccia grafica, riga di comando e `setup.exe` (Fasi 0–6). **Chi usa il programma** parte da [GUIDA.md](GUIDA.md); quanto segue è per chi lo sviluppa.
 
 ## Requisiti
 - Windows 10/11 x64 con GPU NVIDIA e driver aggiornati
@@ -68,18 +68,18 @@ ingeniotec_vox/
   docs/                composizione dei documenti, PDF con Word, impaginazione, guida all'esame
   profiles/            prompt e schemi JSON per tipo di documento (call_report, lesson_exam, lesson_generic)
 assets/                loghi e icona
-build/                 build PyInstaller (build.ps1 → dist\Vox\Vox.exe e vox_cli.exe), icona
+build/                 build PyInstaller (build.ps1 → dist\Vox\), setup.exe (installer.ps1, vox_setup.iss), icona
 ```
 
 ## Documentazione
 - [REQUISITI.md](REQUISITI.md): cosa deve fare il programma
 - [ARCHITETTURA.md](ARCHITETTURA.md): scelte tecniche e piano a fasi
-- [FASE0.md](FASE0.md) … [FASE5.md](FASE5.md): diario di ogni fase, con prove, tempi e costi
+- [FASE0.md](FASE0.md) … [FASE6.md](FASE6.md): diario di ogni fase, con prove, tempi e costi
 
 ## Contribuire
 Il codice è pubblico perché chiunque possa correggerlo e mantenerlo. Problemi e proposte: [issue su GitHub](https://github.com/EmanueleIngeniotec/ingeniotec-vox/issues) (dal programma: Impostazioni → Segnala un problema…). Modifiche: fork, ramo, pull request. Il diario delle fasi (`FASE*.md`) spiega le scelte fatte e le prove.
 
-Nuova versione: aggiornare `__version__` in `ingeniotec_vox/__init__.py`, ricostruire con `build\build.ps1` e pubblicare una release su GitHub con tag `v<versione>`: i programmi già installati la segnalano all'avvio.
+Nuova versione: aggiornare `__version__` in `ingeniotec_vox/__init__.py`, ricostruire con `build\build.ps1`, creare `setup.exe` con `build\installer.ps1` (serve [Inno Setup 6](https://jrsoftware.org/isinfo.php): `winget install JRSoftware.InnoSetup`) e pubblicare una release su GitHub con tag `v<versione>`: i programmi già installati la segnalano all'avvio. Dettagli in [FASE6.md](FASE6.md).
 
 ## Licenza
 [MIT](LICENSE). Il marchio e i loghi Ingeniotec in `assets/` restano di Ingeniotec: chi distribuisce una versione modificata non li usa senza permesso.

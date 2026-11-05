@@ -5,6 +5,7 @@ pensato per un utente non tecnico.
 """
 
 import json
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -49,16 +50,25 @@ def check_gpu() -> Check:
     return Check("GPU", True, f"GPU NVIDIA disponibile{': ' + name if name else ''}.")
 
 
+SETUP_SCRIPT = Path(__file__).with_name("claude_setup.ps1")
+
+
 def claude_exe() -> str | None:
-    return shutil.which("claude")
+    """`claude` dal PATH; altrimenti dove lo mette l'installer ufficiale (il PATH
+    aggiornato dall'installer non arriva ai processi già aperti)."""
+    exe = shutil.which("claude")
+    if exe:
+        return exe
+    p = Path(os.environ.get("USERPROFILE", Path.home())) / ".local" / "bin" / "claude.exe"
+    return str(p) if p.exists() else None
 
 
 def check_claude() -> Check:
     exe = claude_exe()
     if not exe:
         return Check("Claude Code", False,
-                     "Claude Code non è installato. Chiedere all'IT di installarlo "
-                     "(https://claude.com/claude-code) e poi riavviare il programma.")
+                     "Claude Code non è installato. Premere «Installa e collega Claude» "
+                     "(serve internet).")
     r = _run([exe, "--version"])
     version = r.stdout.strip().split()[0] if r.returncode == 0 and r.stdout.strip() else "?"
     r = _run([exe, "auth", "status"])
@@ -70,8 +80,8 @@ def check_claude() -> Check:
                      "Aprire un terminale ed eseguire 'claude' per verificarlo.")
     if not status.get("loggedIn"):
         return Check("Claude Code", False,
-                     f"Claude Code {version} non è collegato a un account. Aprire un terminale, "
-                     "eseguire 'claude auth login' e accedere con l'account aziendale.")
+                     f"Claude Code {version} non è collegato a un account. Premere «Installa e collega Claude» "
+                     "e accedere con l'account aziendale.")
     who = status.get("email", "?")
     org = status.get("orgName") or "nessuna organizzazione"
     plan = status.get("subscriptionType", "?")

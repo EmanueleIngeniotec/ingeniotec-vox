@@ -277,7 +277,7 @@ class MainWindow(QMainWindow):
         self.env_label.setTextFormat(Qt.RichText)
         el.addWidget(self.env_label)
         eb = QHBoxLayout()
-        self.login_btn = QPushButton("Collega l'account Claude")
+        self.login_btn = QPushButton("Installa e collega Claude")
         self.login_btn.clicked.connect(self._claude_login)
         self.login_btn.hide()
         recheck = QPushButton("Ricontrolla")
@@ -443,15 +443,17 @@ class MainWindow(QMainWindow):
         self.env_label.setText("<br>".join(rows))
         self.env_ok = all(ch.ok or not ch.blocking for ch in checks)
         claude_bad = any(ch.name == "Claude Code" and not ch.ok for ch in checks)
-        self.login_btn.setVisible(claude_bad and "non è collegato" in
-                                  next(ch.message for ch in checks if ch.name == "Claude Code"))
+        self.login_btn.setVisible(claude_bad)
         self.env_box.setTitle("Controllo del PC" + ("" if self.env_ok else " – da sistemare"))
         self._validate()
 
     def _claude_login(self) -> None:
-        subprocess.Popen(["cmd", "/k", "claude auth login"], creationflags=subprocess.CREATE_NEW_CONSOLE)
-        QMessageBox.information(self, "Collega l'account Claude",
-                                "Si è aperta una finestra nera: segui le istruzioni per accedere con "
+        from ..core.env_check import SETUP_SCRIPT
+        subprocess.Popen(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                          str(SETUP_SCRIPT)], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        QMessageBox.information(self, "Installa e collega Claude",
+                                "Si è aperta una finestra blu: se serve installa Claude Code, poi "
+                                "apre il browser per accedere con "
                                 "l'account aziendale, poi chiudila e premi «Ricontrolla».")
 
     # ------------------------------------------------------------------ lavori recenti
