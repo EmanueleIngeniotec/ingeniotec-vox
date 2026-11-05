@@ -41,6 +41,7 @@ dist\Vox\Vox.exe                                     (pacchetto)
 - **Segnala un problema** (menu e pagina di un lavoro fermo): apre una issue GitHub già compilata con versione, Windows, esito del lavoro e solo le righe d'errore del log, con il nome utente tolto dai percorsi. Il resto del log non va: contiene nomi e titoli e le issue sono pubbliche. Serve un account GitHub.
 - **Nuova versione:** all'avvio, in un thread, Vox chiede a GitHub l'ultima release (`releases/latest`); se il tag è più recente di `__version__` compare un avviso con il link. Senza rete o senza release nessun messaggio. Dal menu «Controlla aggiornamenti» risponde sempre.
 - **Fine lavoro:** se la finestra non è in primo piano, l'icona nella barra delle applicazioni lampeggia e Windows mostra una notifica (lavoro finito o interrotto); un clic riporta Vox davanti. Con «Non disturbare» attivo Windows la tiene nel centro notifiche.
+- **Modello di Claude fissato:** prima Vox usava il modello predefinito di Claude Code del PC (qui Sonnet), quindi risultati diversi da un PC all'altro. Ora ogni richiesta usa `--model opus --effort medium`; i dettagli del lavoro non mostrano più il costo equivalente in USD (con l'abbonamento non è una spesa).
 
 ## Correzione dei nomi
 Finestra con una riga per voce (≥ 8 s): minuti di parlato, nome dato da Vox (con l'avviso se la voce era mista), due frasi d'esempio, «Vedi campioni» (foglio `voci_fogli/voce_V*.jpg`) e il nome corretto (elenco dei partecipanti o testo libero; «lascia com'è»; «nessuno»).

@@ -30,9 +30,16 @@ class ClaudeResult:
     raw: dict
 
 
+# Fissati qui, non presi dalle impostazioni di Claude Code del PC: stessi risultati per tutti.
+# "opus" = ultimo Opus disponibile.
+MODEL = "opus"
+EFFORT = "medium"
+
+
 def run(prompt: str, *, schema: dict | None = None, system_prompt: str | None = None,
         tools: list[str] | None = None, add_dirs: list[Path] | None = None,
-        cwd: Path | None = None, model: str | None = None, timeout: int = 600) -> ClaudeResult:
+        cwd: Path | None = None, model: str = MODEL, effort: str = EFFORT,
+        timeout: int = 600) -> ClaudeResult:
     exe = claude_exe()
     if not exe:
         raise ClaudeError("Claude Code non è installato.")
@@ -48,6 +55,8 @@ def run(prompt: str, *, schema: dict | None = None, system_prompt: str | None = 
         args += ["--add-dir", str(d)]
     if model:
         args += ["--model", model]
+    if effort:
+        args += ["--effort", effort]
 
     try:
         proc = subprocess.run(args, input=prompt, capture_output=True, text=True,

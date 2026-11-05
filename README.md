@@ -5,7 +5,7 @@ Programma Windows nato per uso interno in Ingeniotec che, da una registrazione v
 - **Dispense di studio** di una lezione online: dispensa con mappa, indice del video, capitoli con i minuti, schermate ritagliate e box VERIFICA FONTI; scheda di ripasso; aggiornamento della guida all'esame del corso.
 - **Report di una call**: report snello (1–2 pagine) e allegato con i dettagli e gli interventi di ogni persona (voci riconosciute in locale e abbinate ai nomi dei riquadri di Teams).
 
-La trascrizione gira in locale sulla GPU (faster-whisper large-v3): il video non lascia il PC. Testi, scelta delle schermate e verifica delle fonti sono affidati a Claude Code in modalità non interattiva (`claude -p`), con l'abbonamento Claude dell'utente e senza chiavi API.
+La trascrizione gira in locale sulla GPU (faster-whisper large-v3): il video non lascia il PC. Testi, scelta delle schermate e verifica delle fonti sono affidati a Claude Code in modalità non interattiva (`claude -p`), con l'abbonamento Claude dell'utente e senza chiavi API. Modello e impegno sono fissati nel programma (Opus, effort medio: `MODEL` ed `EFFORT` in `ingeniotec_vox/core/claude.py`), non presi dalle impostazioni di Claude Code del PC.
 
 > Stato: interfaccia grafica e riga di comando (Fasi 0–5). L'installer è previsto nella Fase 6 (vedi [ARCHITETTURA.md](ARCHITETTURA.md)).
 
