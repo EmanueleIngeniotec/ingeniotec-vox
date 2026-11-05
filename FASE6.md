@@ -14,7 +14,7 @@ Distribuzione interna: un `setup.exe` che un collega installa da solo, con la gu
 | 4 | Installazione, prova completa dal programma installato, reinstallazione, disinstallazione su questo PC | ✅ |
 | 5 | Guida per chi lo usa (`GUIDA.md`) e lista di prova per gli altri PC | ✅ |
 | 6 | Distribuzione: `setup.exe` intero e guida PDF nella cartella di rete aziendale dei programmi | ✅ |
-| 7 | Release `v0.1.0` su GitHub con solo tag e note (nessun binario) | ⏳ |
+| 7 | Release `v0.1.0` su GitHub con solo tag e note (nessun binario), `releases/latest` la restituisce | ✅ |
 | 8 | Prove su 2–3 PC diversi (lista sotto) | ⏳ |
 
 ## Come si costruisce
