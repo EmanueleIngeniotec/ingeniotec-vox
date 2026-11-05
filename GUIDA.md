@@ -51,7 +51,7 @@ Tempi indicativi (misurati su questo tipo di PC): una call di 1 ora e mezza circ
 | Nomi sbagliati nel report di una call | **Correggi nomi…**: scegli il nome giusto per ogni voce, Vox rifà il report. |
 | Errore su Word o sul PDF | Chiudi le finestre di dialogo aperte in Word e premi **Riprendi**. |
 | «Spazio libero insufficiente» | Libera spazio o scegli un'altra cartella dei risultati. |
-| Avviso «È disponibile una nuova versione» | Scarica il nuovo `setup.exe` dal link e installalo sopra: lavori e impostazioni restano. |
+| Avviso «È disponibile la versione …» | Prendi il nuovo `setup.exe` dalla cartella di rete aziendale dei programmi e installalo sopra: lavori e impostazioni restano. Il link «Novità» spiega cosa cambia. |
 
 Qualcosa non va? **Impostazioni → Segnala un problema…** prepara la segnalazione con i dettagli tecnici (senza i contenuti del video). Serve un account GitHub; in alternativa scrivi a chi ti ha dato il programma e allega `vox.log` dalla cartella `_lavoro` del lavoro.
 

@@ -13,14 +13,15 @@ Distribuzione interna: un `setup.exe` che un collega installa da solo, con la gu
 | 3 | Versione 0.1.0, pacchetto ricostruito | ✅ |
 | 4 | Installazione, prova completa dal programma installato, reinstallazione, disinstallazione su questo PC | ✅ |
 | 5 | Guida per chi lo usa (`GUIDA.md`) e lista di prova per gli altri PC | ✅ |
-| 6 | Dove pubblicare `setup.exe` (3,3 GB, oltre i 2 GB per allegato delle release GitHub) | ⏳ scelta dell'utente |
-| 7 | Release `v0.1.0` | ⏳ dopo il via dell'utente |
+| 6 | Distribuzione: `setup.exe` intero e guida PDF nella cartella di rete aziendale dei programmi | ✅ |
+| 7 | Release `v0.1.0` su GitHub con solo tag e note (nessun binario) | ⏳ |
 | 8 | Prove su 2–3 PC diversi (lista sotto) | ⏳ |
 
 ## Come si costruisce
 ```
 build\build.ps1        -> dist\Vox\ (4,1 GB, modelli compresi)
 build\installer.ps1    -> dist\installer\Vox-<versione>-setup.exe
+.venv\Scripts\python build\guida_pdf.py   -> dist\installer\Guida Ingeniotec Vox.pdf (GUIDA.md via Word)
 ```
 `installer.ps1` legge la versione da `ingeniotec_vox/__init__.py` e la passa a Inno Setup (`/DAppVersion`). Inno Setup 6.7.3 installato con `winget install JRSoftware.InnoSetup` (per utente, `%LOCALAPPDATA%\Programs\Inno Setup 6`).
 
@@ -50,6 +51,15 @@ Script unico (Windows PowerShell 5.1, UTF-8 con BOM per gli accenti):
 4. messaggio finale e «Premi Invio».
 
 In Vox il pulsante si chiama ora **«Installa e collega Claude»**, compare per Claude mancante o non collegato e lancia lo stesso script. `env_check.claude_exe()` cerca anche in `.local\bin`: il PATH aggiornato dall'installer non arriva a un Vox già aperto, quindi «Ricontrolla» funziona senza riavviare.
+
+## Distribuzione (scelta dell'utente, 05/11)
+| | |
+|---|---|
+| `setup.exe` | **intero** (un file da 3,3 GB) nella cartella di rete aziendale dei programmi, insieme a `Guida Ingeniotec Vox.pdf`; copia verificata con SHA-256 |
+| GitHub | **solo il codice** per mantenere il programma: nessun binario. Ogni versione ha una release con tag `v<versione>` e note, senza allegati |
+| Avviso in Vox | invariato nel meccanismo (`releases/latest`); il testo ora dice di prendere il nuovo setup dalla cartella di rete e il link porta alle note («Novità») |
+
+Scartati: setup diviso in pezzi < 2 GB allegati alla release, link cloud. Nelle note pubbliche non compare il percorso di rete.
 
 ## Versione
 **0.1.0**: prima distribuzione interna, funzioni complete ma non ancora provate da un utente non tecnico né su altri PC. **1.0.0** dopo le prove della riga 8 e la prova di Fase 5 riga 7. Tag `v<versione>`; Vox confronta il tag di `releases/latest` con `__version__`.
@@ -90,7 +100,7 @@ Scegliere PC diversi tra loro: almeno uno **senza Claude Code**, uno con **utent
 Rischio da guardare: GPU con poca memoria (large-v3 in float16 vuole ~4,5 GB); se fallisce, annotare il messaggio.
 
 ## Documentazione
-- `GUIDA.md`: per chi lo usa (requisiti, installazione, primo avvio, problemi comuni, disinstallazione). Da allegare alla release e da tenere accanto a setup.exe nella cartella di distribuzione.
+- `GUIDA.md`: per chi lo usa (requisiti, installazione, primo avvio, problemi comuni, disinstallazione). In PDF accanto a setup.exe nella cartella di rete (`build\guida_pdf.py`); su GitHub resta il .md.
 - `README.md`: sezione installazione per chi sviluppa e build di setup.exe.
 
 ## Non fatto in questa fase

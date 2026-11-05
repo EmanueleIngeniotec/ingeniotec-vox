@@ -215,7 +215,8 @@ class MainWindow(QMainWindow):
         if info:
             self.update_banner.setText(
                 f"<b>È disponibile la versione {info['versione']}</b> (questa è la {__version__}). "
-                f"<a href='{info['url']}'>Scaricala da GitHub</a>")
+                "Il nuovo setup è nella cartella di rete aziendale dei programmi: installalo sopra, "
+                f"lavori e impostazioni restano. <a href='{info['url']}'>Novità</a>")
             self.update_banner.show()
             if not quiet:
                 QDesktopServices.openUrl(QUrl(info["url"]))
