@@ -191,8 +191,7 @@ def ask(job: Job, prof: Profile, step: str, label: str, values: dict,
                              cwd=job.work, timeout=timeout)
             if res.data is None:
                 raise claude.ClaudeError("Claude non ha restituito il risultato strutturato.")
-            cost = f", {res.cost_usd:.2f} USD equivalenti" if res.cost_usd else ""
-            job.log(f"  {label}: risposta di Claude in {(res.duration_ms or 0) / 1000:.0f} s{cost}")
+            job.log(f"  {label}: risposta di Claude in {(res.duration_ms or 0) / 1000:.0f} s")
             return res.data
         except claude.ClaudeLimitError:
             raise
