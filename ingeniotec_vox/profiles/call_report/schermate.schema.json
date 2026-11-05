@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "schermate": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "argomento": {
+            "type": "string"
+          },
+          "didascalia": {
+            "type": "string"
+          },
+          "ritaglio": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "id",
+          "argomento",
+          "didascalia",
+          "ritaglio"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schermate"
+  ],
+  "additionalProperties": false
+}

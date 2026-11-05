@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "properties": {
+    "riassunto": {"type": "string"},
+    "argomenti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "titolo": {"type": "string"},
+          "inizio": {"type": "string"},
+          "fine": {"type": "string"},
+          "punti": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["titolo", "inizio", "fine", "punti"],
+        "additionalProperties": false
+      }
+    },
+    "decisioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"testo": {"type": "string"}, "min": {"type": "string"}},
+        "required": ["testo", "min"],
+        "additionalProperties": false
+      }
+    },
+    "azioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chi": {"type": "string"},
+          "cosa": {"type": "string"},
+          "quando": {"type": "string"},
+          "min": {"type": "string"}
+        },
+        "required": ["chi", "cosa", "quando", "min"],
+        "additionalProperties": false
+      }
+    },
+    "punti_aperti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"testo": {"type": "string"}, "min": {"type": "string"}},
+        "required": ["testo", "min"],
+        "additionalProperties": false
+      }
+    },
+    "interventi": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "persona": {"type": "string"},
+          "min": {"type": "string"},
+          "testo": {"type": "string"}
+        },
+        "required": ["persona", "min", "testo"],
+        "additionalProperties": false
+      }
+    },
+    "termini": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"termine": {"type": "string"}, "significato": {"type": "string"}},
+        "required": ["termine", "significato"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["riassunto", "argomenti", "decisioni", "azioni", "punti_aperti", "interventi", "termini"],
+  "additionalProperties": false
+}

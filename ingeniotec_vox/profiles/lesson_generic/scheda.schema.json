@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "properties": {
+    "in_una_frase": {
+      "type": "string"
+    },
+    "sezioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "titolo": {
+            "type": "string"
+          },
+          "elementi": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tipo": {
+                  "type": "string",
+                  "enum": [
+                    "paragrafo",
+                    "elenco",
+                    "passi",
+                    "tabella"
+                  ]
+                },
+                "testo": {
+                  "type": "string"
+                },
+                "voci": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "intestazione": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "righe": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "tipo"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "titolo",
+          "elementi"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "trabocchetti": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "in_una_frase",
+    "sezioni",
+    "trabocchetti"
+  ],
+  "additionalProperties": false
+}

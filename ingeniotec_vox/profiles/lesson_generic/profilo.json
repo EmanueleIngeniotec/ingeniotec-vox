@@ -1,0 +1,5 @@
+{
+  "descrizione": "Lezione generica: stessa dispensa senza esame, prova pratica né guida all'esame",
+  "eredita": "lesson_exam",
+  "esame": false
+}

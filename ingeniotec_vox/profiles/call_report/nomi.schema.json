@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "voci": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "voce": {"type": "string"},
+          "campioni": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "n": {"type": "integer"},
+                "nome": {"type": "string"}
+              },
+              "required": ["n", "nome"],
+              "additionalProperties": false
+            }
+          },
+          "nome": {"type": "string"},
+          "certezza": {"type": "string", "enum": ["alta", "media", "bassa"]},
+          "motivo": {"type": "string"}
+        },
+        "required": ["voce", "campioni", "nome", "certezza", "motivo"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["voci"],
+  "additionalProperties": false
+}

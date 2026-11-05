@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "operazioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "op": {"type": "string", "enum": ["aggiungi_riga", "modifica_cella", "riscrivi_paragrafo", "nuovo_punto", "nuova_tabella"]},
+          "dove": {"type": "string"},
+          "motivo": {"type": "string"},
+          "riga": {"type": "integer"},
+          "colonna": {"type": "integer"},
+          "testo": {"type": "string"},
+          "celle": {"type": "array", "items": {"type": "string"}},
+          "titolo": {"type": "string"},
+          "intestazione": {"type": "array", "items": {"type": "string"}},
+          "righe": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}
+        },
+        "required": ["op", "dove", "motivo"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["operazioni"],
+  "additionalProperties": false
+}

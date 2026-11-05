@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "doppioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"chiave": {"type": "string"}, "come": {"type": "string"}},
+        "required": ["chiave", "come"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["doppioni"],
+  "additionalProperties": false
+}

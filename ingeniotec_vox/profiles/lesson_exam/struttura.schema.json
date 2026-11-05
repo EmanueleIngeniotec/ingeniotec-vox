@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "titolo": {"type": "string"},
+    "docente": {"type": "string"},
+    "nota_video": {"type": "string"},
+    "ricorda": {"type": "string"},
+    "capitoli": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "titolo": {"type": "string"},
+          "inizio": {"type": "string"},
+          "fine": {"type": "string"},
+          "peso": {"type": "string"},
+          "contenuto": {"type": "string"}
+        },
+        "required": ["titolo", "inizio", "fine", "peso", "contenuto"],
+        "additionalProperties": false
+      }
+    },
+    "indice": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {"min": {"type": "string"}, "voce": {"type": "string"}},
+        "required": ["min", "voce"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["titolo", "docente", "nota_video", "ricorda", "capitoli", "indice"],
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+build/_work/
+dist/
+tests/fixtures/*.wav
+_out/
+*.log
+models/
+Presentazione_Ingeniotec.pdf

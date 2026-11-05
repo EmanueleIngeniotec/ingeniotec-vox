@@ -1,0 +1,202 @@
+{
+  "type": "object",
+  "properties": {
+    "titolo": {
+      "type": "string"
+    },
+    "oggetto": {
+      "type": "string"
+    },
+    "partecipanti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "ruolo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nome",
+          "ruolo"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sintesi": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decisioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "testo": {
+            "type": "string"
+          },
+          "min": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "testo",
+          "min"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "azioni": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chi": {
+            "type": "string"
+          },
+          "cosa": {
+            "type": "string"
+          },
+          "quando": {
+            "type": "string"
+          },
+          "min": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "chi",
+          "cosa",
+          "quando",
+          "min"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "punti_aperti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "testo": {
+            "type": "string"
+          },
+          "min": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "testo",
+          "min"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "argomenti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "titolo": {
+            "type": "string"
+          },
+          "inizio": {
+            "type": "string"
+          },
+          "fine": {
+            "type": "string"
+          },
+          "sintesi": {
+            "type": "string"
+          },
+          "punti": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "titolo",
+          "inizio",
+          "fine",
+          "sintesi",
+          "punti"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "interventi": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "persona": {
+            "type": "string"
+          },
+          "contributi": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "string"
+                },
+                "testo": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "min",
+                "testo"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "persona",
+          "contributi"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "termini": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "termine": {
+            "type": "string"
+          },
+          "significato": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "termine",
+          "significato"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "titolo",
+    "oggetto",
+    "partecipanti",
+    "sintesi",
+    "decisioni",
+    "azioni",
+    "punti_aperti",
+    "argomenti",
+    "interventi",
+    "termini"
+  ]
+}

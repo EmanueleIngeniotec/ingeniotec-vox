@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "esiti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chiave": {"type": "string"},
+          "esito": {"type": "string", "enum": ["confermato", "precisazione", "smentito", "non_verificabile"]},
+          "testo": {"type": "string"},
+          "fonti": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {"titolo": {"type": "string"}, "url": {"type": "string"}},
+              "required": ["titolo", "url"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["chiave", "esito", "testo", "fonti"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["esiti"],
+  "additionalProperties": false
+}

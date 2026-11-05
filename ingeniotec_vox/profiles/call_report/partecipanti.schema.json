@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "titolo_finestra": {"type": "string"},
+    "piattaforma": {"type": "string"},
+    "partecipanti": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome": {"type": "string"},
+          "note": {"type": "string"}
+        },
+        "required": ["nome", "note"],
+        "additionalProperties": false
+      }
+    },
+    "descrizione_video": {"type": "string"}
+  },
+  "required": ["titolo_finestra", "piattaforma", "partecipanti", "descrizione_video"],
+  "additionalProperties": false
+}
