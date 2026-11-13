@@ -10,7 +10,9 @@ if (-not (Test-Path .venv)) {
 }
 .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python build\make_icon.py
-.venv\Scripts\pyinstaller build\vox.spec --noconfirm --clean --distpath dist --workpath build\_work
+# "python -m PyInstaller" e non pyinstaller.exe: il launcher smette di funzionare se la cartella viene spostata
+.venv\Scripts\python -m PyInstaller build\vox.spec --noconfirm --clean --distpath dist --workpath build\_work
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller uscito con codice $LASTEXITCODE" }
 $dist = "dist\Vox"
 # PyInstaller svuota dist\Vox: rimette i modelli.
 # Whisper dalla cartella models\ del repository o dalla cache Hugging Face, se c'è.
