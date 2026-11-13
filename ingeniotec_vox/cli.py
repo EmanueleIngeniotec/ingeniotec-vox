@@ -50,7 +50,12 @@ def main(argv: list[str] | None = None) -> int:
     l.add_argument("--model", help="cartella del modello faster-whisper")
     l.add_argument("--rifai", choices=list(pipeline_lezione.STEPS),
                    help="rifà il lavoro da questa fase in poi (le precedenti restano)")
+    for sp in (c, l):
+        sp.add_argument("--crediti", action="store_true",
+                        help=f"continua oltre il {claude.THRESHOLD:.0%}% del limite del piano, anche "
+                             "consumando i crediti a pagamento dell'account (uso extra)")
     a = p.parse_args(argv)
+    claude.allow_credits = a.crediti
 
     if not a.video.is_file():
         p.error(f"file non trovato: {a.video}")
@@ -78,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
                                       max_shots=a.max_schermate, block_minutes=a.blocco_min,
                                       model=a.model, redo=a.rifai)
     except claude.ClaudeLimitError as exc:
-        return _fail(ERR_LIMITE, "limite", str(exc))
+        return _fail(ERR_LIMITE, "limite", str(exc), crediti=exc.credits)
     except claude.ClaudeError as exc:
         return _fail(ERR_CLAUDE, "claude", f"{exc}")
     except PdfError as exc:
@@ -93,10 +98,12 @@ def main(argv: list[str] | None = None) -> int:
     return OK
 
 
-def _fail(code: int, kind: str, msg: str) -> int:
+def _fail(code: int, kind: str, msg: str, **extra) -> int:
     print(f"Interrotto: {msg}")
     print("Rilanciando lo stesso comando il lavoro riprende dalla fase interrotta.")
-    emit(errore=kind, messaggio=msg)
+    if extra.get("crediti"):
+        print("Con --crediti continua subito, consumando i crediti a pagamento dell'account.")
+    emit(errore=kind, messaggio=msg, **extra)
     return code
 
 

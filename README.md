@@ -53,7 +53,7 @@ Report di una call:
 ```
 I risultati vanno in `_out\<nome lavoro>\` (cambiabile con `--out` e `--nome`); i file intermedi, il log `vox.log` e le anteprime delle pagine in `_lavoro\`.
 
-Il lavoro è diviso in fasi salvate su disco: se si interrompe (errore, limite d'uso di Claude), rilanciando lo stesso comando riparte dalla fase mancante. `--rifai <fase>` rifà il lavoro da quella fase in poi. Elenco completo delle opzioni con `--help`.
+Il lavoro è diviso in fasi salvate su disco: se si interrompe (errore, limite d'uso di Claude), rilanciando lo stesso comando riparte dalla fase mancante. `--rifai <fase>` rifà il lavoro da quella fase in poi. Se l'account Claude ha i crediti a pagamento (uso extra), Vox si ferma al 90% del limite del piano per non consumarli (`THRESHOLD` in `ingeniotec_vox/core/claude.py`); `--crediti` continua lo stesso (dalla finestra: «Continua a pagamento»). Elenco completo delle opzioni con `--help`.
 
 Con `--guida` la versione precedente della guida viene copiata in `_versioni_precedenti\` accanto alla guida prima di modificarla.
 

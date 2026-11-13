@@ -807,6 +807,27 @@ class MainWindow(QMainWindow):
             self.btn_report.setVisible(kind != "annullato")
         self.refresh_jobs()
         self.notify_end(code, kind, elapsed)
+        if kind == "limite" and self.runner.credits:
+            self._ask_credits(msg)
+
+    def _ask_credits(self, msg: str) -> None:
+        """Fermo al limite del piano: aspettare che si azzeri o continuare a pagamento."""
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle("Limite d'uso di Claude")
+        box.setText(msg)
+        box.setInformativeText(
+            "Puoi aspettare che il limite si azzeri e poi premere «Riprendi»: non costa nulla.\n\n"
+            "Oppure continuare subito: da qui in poi il lavoro consuma i crediti a pagamento "
+            "dell'account Claude (uso extra), addebitati in più rispetto all'abbonamento. "
+            "Vox non può sapere in anticipo quanto costerà.")
+        wait = box.addButton("Aspetta", QMessageBox.RejectRole)
+        go = box.addButton("Continua a pagamento", QMessageBox.DestructiveRole)
+        box.setDefaultButton(wait)
+        box.setEscapeButton(wait)
+        box.exec()
+        if box.clickedButton() is go:
+            self.launch(self.job_dir, self.rec, runner.job_args(self.rec, self.job_dir, credits=True))
 
     def _main_pdf(self) -> Path | None:
         pdfs = [Path(f) for f in self.files if f.lower().endswith(".pdf")]

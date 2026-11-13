@@ -46,7 +46,8 @@ Tempi indicativi (misurati su questo tipo di PC): una call di 1 ora e mezza circ
 | «Nessuna GPU NVIDIA rilevata» | Aggiorna il driver da nvidia.com/drivers (o chiedi all'IT) e riavvia il PC. Senza scheda NVIDIA Vox non funziona. |
 | «Claude Code non è installato» / «non è collegato» | Premi **Installa e collega Claude**, segui la finestra blu e il browser, poi **Ricontrolla**. |
 | La finestra blu dice «Download non riuscito» | Manca internet o un firewall blocca `claude.ai`: riprova da un'altra rete o chiedi all'IT. |
-| «In attesa – limite Claude» nei lavori recenti | Hai esaurito l'uso di Claude per qualche ora. Più tardi premi **Riprendi**: il lavoro riparte da dove si era fermato. |
+| «In attesa – limite Claude» nei lavori recenti | Hai esaurito l'uso di Claude per qualche ora (il messaggio dice quando si azzera). Più tardi premi **Riprendi**: il lavoro riparte da dove si era fermato. |
+| Finestra «Limite d'uso di Claude» | L'account ha i crediti a pagamento (uso extra) e Vox si è fermato al 90% del limite per non consumarli. **Aspetta**: riprendi quando il limite si azzera, senza costi. **Continua a pagamento**: il lavoro prosegue subito e la parte oltre il limite viene addebitata sull'account. |
 | Lavoro interrotto (PC spento, errore) | In **Lavori recenti** premi **Riprendi**. **Rifai da capo** solo se il risultato era sbagliato. |
 | Nomi sbagliati nel report di una call | **Correggi nomi…**: scegli il nome giusto per ogni voce, Vox rifà il report. |
 | Errore su Word o sul PDF | Chiudi le finestre di dialogo aperte in Word e premi **Riprendi**. |

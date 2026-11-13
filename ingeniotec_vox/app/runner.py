@@ -48,8 +48,9 @@ PHASES = {
 PART_DONE = re.compile(r"^(?:Parte|Capitolo|Fonti) (\d+)/(\d+): (?:fatto|già fatto)")
 
 ERRORS = {
-    "limite": "È stato raggiunto il limite d'uso di Claude. Il lavoro è salvato: riprendilo più tardi "
-              "da «Lavori recenti» (le fasi già concluse non si rifanno).",
+    "limite": "Vox si è fermato al limite d'uso di Claude, prima di consumare crediti a pagamento. "
+              "Il lavoro è salvato: riprendilo da «Lavori recenti» quando il limite si azzera "
+              "(le fasi già concluse non si rifanno).",
     "claude": "Claude non ha completato una richiesta. Controlla la connessione a internet e "
               "riprendi il lavoro da «Lavori recenti».",
     "word": "Microsoft Word non ha creato i PDF. Chiudi eventuali finestre di Word bloccate e "
@@ -73,7 +74,8 @@ def cli_command() -> list[str]:
     return [sys.executable, "-m", "ingeniotec_vox.cli"]
 
 
-def job_args(record: dict, job_dir: Path, redo: str | None = None) -> list[str]:
+def job_args(record: dict, job_dir: Path, redo: str | None = None,
+             credits: bool = False) -> list[str]:
     """Argomenti della CLI per (ri)lanciare il lavoro descritto da `lavoro.json`."""
     o = record.get("opzioni", {})
     out = ["--out", str(job_dir.parent), "--nome", job_dir.name]
@@ -93,6 +95,8 @@ def job_args(record: dict, job_dir: Path, redo: str | None = None) -> list[str]:
             args += ["--guida", o["guida"]]
     if redo:
         args += ["--rifai", redo]
+    if credits:
+        args.append("--crediti")
     return args
 
 
@@ -166,6 +170,7 @@ class Runner(QObject):
         self.proc.errorOccurred.connect(self._error)
         self._buf = b""
         self._err = ("", "")
+        self.credits = False        # fermo al limite, ma l'account ha i crediti per continuare
         self.current = None
         self.cancelled = False
         self.started_at = 0.0
@@ -208,6 +213,7 @@ class Runner(QObject):
     def _event(self, ev: dict) -> None:
         if "errore" in ev:
             self._err = (ev["errore"], ev.get("messaggio", ""))
+            self.credits = bool(ev.get("crediti"))
         elif "fine" in ev:
             self.files.emit(ev["fine"])
         elif "avanzamento" in ev:
