@@ -35,7 +35,7 @@ Senza il modello il report si fa lo stesso, con gli interventi attribuiti dal so
 ```powershell
 .venv\Scripts\python -m ingeniotec_vox.app
 ```
-Si sceglie cosa produrre (report di call o dispense), si trascina il video nella finestra e si preme **Avvia**. La finestra mostra le fasi e l'avanzamento, permette di annullare e, da «Lavori recenti», di riprendere un lavoro interrotto, rifarlo da capo o correggere i nomi di chi parla in una call. Dal pulsante **Impostazioni** si cambiano il tema (chiaro, scuro, come Windows), si apre il codice sorgente su GitHub e si legge la versione. I risultati vanno in `Documenti\Ingeniotec Vox\<nome lavoro>\` (cambiabile). Dettagli in [FASE5.md](FASE5.md).
+Si sceglie cosa produrre (report di call o dispense), si trascina il video nella finestra e si preme **Avvia**. La finestra mostra le fasi e l'avanzamento, permette di annullare e, da «Lavori recenti», di riprendere un lavoro interrotto, rifarlo da capo o correggere i nomi di chi parla in una call. Dal pulsante **Impostazioni** si cambiano il tema (chiaro, scuro, come Windows), si apre il codice sorgente su GitHub e si legge la versione. I risultati vanno in `Documenti\Ingeniotec Vox\<nome lavoro>\` (cambiabile).
 
 ### Riga di comando
 Dispense di una lezione di un corso con esame:
@@ -71,15 +71,33 @@ assets/                loghi e icona
 build/                 build PyInstaller (build.ps1 → dist\Vox\), setup.exe (installer.ps1, vox_setup.iss), icona
 ```
 
-## Documentazione
-- [REQUISITI.md](REQUISITI.md): cosa deve fare il programma
-- [ARCHITETTURA.md](ARCHITETTURA.md): scelte tecniche e piano a fasi
-- [FASE0.md](FASE0.md) … [FASE6.md](FASE6.md): diario di ogni fase, con prove, tempi e costi
+## Scelte tecniche
+- **Pipeline a fasi con checkpoint** in `_lavoro\`: ogni fase salva il risultato e un lavoro interrotto riparte da dove si è fermato. I video lunghi si dividono in blocchi con riassunto progressivo.
+- **Contenuto separato dall'impaginazione:** Claude restituisce JSON validato da uno schema (`profiles/`), `docs/` lo impagina sempre con lo stesso stile.
+- **Claude Code isolato:** unico punto di contatto `core/claude.py`; le chiamate di solo testo girano con `--tools ""`, gli strumenti (Read sui fotogrammi, ricerca web per le fonti) si abilitano per singola chiamata.
+- **Voci senza token:** sherpa-onnx con il modello ERes2Net su CPU; il nome si dà a ogni campione di voce confrontando il riquadro evidenziato di Teams, così le voci miste emergono. Se l'abbinamento sbaglia, i nomi si correggono dalla finestra (`app/nomi.py`).
+- **DLL NVIDIA:** nel pacchetto solo cuBLAS (`CUDA_KEEP` in `build/vox.spec`, circa −1,3 GB). Se su un PC mancasse cuDNN, va rimesso lì.
+- **Dati e log** in `%LOCALAPPDATA%\Ingeniotec Vox`, mai nella cartella di installazione.
+
+## setup.exe
+`build\vox_setup.iss` (Inno Setup) produce un unico file, con Python, CUDA e modelli già dentro:
+- controlla driver NVIDIA e Word (solo verifica, con istruzioni se mancano);
+- installa in `C:\Programmi\Ingeniotec Software\Vox` (modificabile), con collegamenti e disinstallazione da Impostazioni; un aggiornamento si installa sopra;
+- all'ultima pagina installa Claude Code e collega l'account **come l'utente** che ha avviato il setup (`core/claude_setup.ps1`), anche se UAC ha chiesto le credenziali dell'IT. Se l'IT installa dal proprio account, Vox al primo avvio mostra il pulsante «Installa e collega Claude».
+
+Il setup (~3,3 GB) e `Guida Ingeniotec Vox.pdf` si distribuiscono dalla cartella di rete aziendale; su GitHub c'è solo il codice e una release per versione, senza allegati.
 
 ## Contribuire
-Il codice è pubblico perché chiunque possa correggerlo e mantenerlo. Problemi e proposte: [issue su GitHub](https://github.com/EmanueleIngeniotec/ingeniotec-vox/issues) (dal programma: Impostazioni → Segnala un problema…). Modifiche: fork, ramo, pull request. Il diario delle fasi (`FASE*.md`) spiega le scelte fatte e le prove.
+Il codice è pubblico perché chiunque possa correggerlo e mantenerlo. Problemi e proposte: [issue su GitHub](https://github.com/EmanueleIngeniotec/ingeniotec-vox/issues) (dal programma: Impostazioni → Segnala un problema…). Modifiche: fork, ramo, pull request.
 
-Nuova versione: aggiornare `__version__` in `ingeniotec_vox/__init__.py`, ricostruire con `build\build.ps1`, creare `setup.exe` con `build\installer.ps1` (serve [Inno Setup 6](https://jrsoftware.org/isinfo.php): `winget install JRSoftware.InnoSetup`) e pubblicare una release su GitHub con tag `v<versione>`: i programmi già installati la segnalano all'avvio. Dettagli in [FASE6.md](FASE6.md).
+Nuova versione:
+```powershell
+# 1. aggiornare __version__ in ingeniotec_vox/__init__.py
+build\build.ps1                          # -> dist\Vox\
+build\installer.ps1                      # -> dist\installer\Vox-<versione>-setup.exe (serve Inno Setup 6: winget install JRSoftware.InnoSetup)
+.venv\Scripts\python build\guida_pdf.py  # -> dist\installer\Guida Ingeniotec Vox.pdf (da GUIDA.md, con Word)
+```
+Poi pubblicare una release su GitHub con tag `v<versione>`: i programmi già installati la segnalano all'avvio.
 
 ## Licenza
 [MIT](LICENSE). Il marchio e i loghi Ingeniotec in `assets/` restano di Ingeniotec: chi distribuisce una versione modificata non li usa senza permesso.

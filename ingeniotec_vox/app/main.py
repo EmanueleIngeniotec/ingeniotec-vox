@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def data_dir() -> Path:
-    """Dati e log del programma, mai nella cartella di installazione (ARCHITETTURA.md)."""
+    """Dati e log del programma, mai nella cartella di installazione (vedi README, «Scelte tecniche»)."""
     d = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Ingeniotec Vox"
     d.mkdir(parents=True, exist_ok=True)
     return d

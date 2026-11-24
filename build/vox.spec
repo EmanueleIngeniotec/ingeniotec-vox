@@ -10,7 +10,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 ROOT = Path(SPECPATH).parent
 SITE = Path(sys.prefix) / "Lib" / "site-packages"
 
-# DLL CUDA: solo cuBLAS (vedi FASE0.md e core/cuda_dll.py)
+# DLL CUDA: solo cuBLAS (vedi README e core/cuda_dll.py)
 CUDA_KEEP = {"cublas64_12.dll", "cublasLt64_12.dll"}
 cuda = [(str(dll), str(dll.parent.relative_to(SITE)))
         for dll in (SITE / "nvidia").glob("*/bin/*.dll") if dll.name in CUDA_KEEP]

@@ -1,5 +1,5 @@
-﻿; Inno Setup – setup.exe di Ingeniotec Vox (Fase 6), costruito da build\installer.ps1 su dist\Vox\.
-; Requisiti in ARCHITETTURA.md, «Installazione (decisa il 28/10)».
+﻿; Inno Setup – setup.exe di Ingeniotec Vox, costruito da build\installer.ps1 su dist\Vox\.
+; Cosa fa: README, «setup.exe».
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif

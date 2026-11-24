@@ -1,4 +1,4 @@
-"""Correzione manuale dei nomi delle voci di una call (ripiego previsto in ARCHITETTURA.md).
+"""Correzione manuale dei nomi delle voci di una call.
 
 Mostra ogni voce con minuti di parlato, nome dato da Vox, frasi d'esempio e foglio dei
 campioni; il nome scelto vale per tutta la voce. Salva `_lavoro/correzioni_nomi.json`,
