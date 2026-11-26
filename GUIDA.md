@@ -44,9 +44,7 @@ Tempi indicativi (misurati su questo tipo di PC): una call di 1 ora e mezza circ
 Vox dà un nome alle voci guardando quale riquadro di Teams è evidenziato. Il **tuo** riquadro però non si riconosce (è piccolo, spesso con le sole iniziali): senza accorgimenti la tua voce finisce sotto il nome di un altro. Per evitarlo OBS registra il tuo microfono anche su una seconda traccia audio, e Vox riconosce la tua voce da lì. Si imposta una volta sola:
 
 1. OBS → **Impostazioni → Uscita → Registrazione**: in **Qualità della registrazione** scegli una voce diversa da «Uguale alla diretta» (es. **Alta qualità, file di medie dimensioni**); compaiono le caselle **Tracce audio**: spunta **1** e **2**. **OK**.
-2. Nel mixer audio di OBS: ingranaggio (⋮) → **Proprietà audio avanzate**. Nelle colonne **Tracce**:
-   - **Audio del desktop**: solo **1**;
-   - **Mic/Aux** (il tuo microfono): **1** e **2**.
+2. Nel mixer audio di OBS: ingranaggio (⋮) → **Proprietà audio avanzate**. Nelle colonne **Tracce** spunta per **Audio del desktop** solo **1**, per **Mic/Aux** (il tuo microfono) **1** e **2**.
 3. In Vox, nella riga **Chi registra**, scrivi il tuo nome come appare in Teams (resta salvato).
 
 La traccia 1 resta la registrazione completa; la 2 contiene solo il tuo microfono. Nel `vox.log` del lavoro la riga «chi registra (traccia del microfono)» conferma che Vox l'ha usata. Se la traccia 2 contiene anche l'audio del desktop, Vox la ignora e lo scrive nel log.
