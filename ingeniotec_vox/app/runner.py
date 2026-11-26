@@ -83,6 +83,8 @@ def job_args(record: dict, job_dir: Path, redo: str | None = None,
         args = ["call", record["video"], *out]
         if o.get("trascrizione"):
             args.append("--trascrizione")
+        if o.get("chi_registra"):
+            args += ["--chi-registra", o["chi_registra"]]
     else:
         args = ["lezione", record["video"], *out, "--profilo", o.get("profilo") or "esame"]
         if o.get("corso"):

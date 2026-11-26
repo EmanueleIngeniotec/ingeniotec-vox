@@ -79,7 +79,7 @@ class NamesDialog(QDialog):
         self.combos: dict[str, tuple[QComboBox, str]] = {}
         row = 1
         for v in voci["voci"]:
-            if v["secondi"] < MIN_VOICE:
+            if v["secondi"] < MIN_VOICE and not v.get("microfono"):
                 continue
             vid = v["id"]
             info = nomi["voci"].get(vid, {})
@@ -94,6 +94,11 @@ class NamesDialog(QDialog):
             shown = current or "non identificata"
             if mixed:
                 shown += "<br><i>(due persone con voce simile)</i>"
+            if info.get("modo") == "microfono":
+                shown += ("<br><i>(chi registra? da controllare)</i>" if info.get("incerta")
+                          else "<br><i>(chi registra, dal microfono)</i>")
+            elif info.get("stanza"):
+                shown += "<br><i>(nella stanza, dal microfono)</i>"
             grid.addWidget(QLabel(shown), row, 2)
             ph = QLabel(phrases)
             ph.setWordWrap(True)

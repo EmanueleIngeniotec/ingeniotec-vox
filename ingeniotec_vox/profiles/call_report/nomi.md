@@ -10,6 +10,8 @@ Per ogni voce, nella cartella di lavoro c'è un foglio `voci_fogli/voce_<voce>.j
 - a sinistra il fotogramma intero ridotto, con un rettangolo rosso attorno al riquadro che la piattaforma evidenziava in quel momento (il bordo colorato che indica chi sta parlando);
 - a destra lo stesso riquadro ingrandito.
 
+Chi registra la riunione non si riconosce dal video (il suo riquadro non viene evidenziato). Se la registrazione ha la traccia del solo microfono, la sua voce è separata e indicata come **voce di chi registra**: non ha campioni; dalle il nome indicato, oppure, se non è indicato, ricavalo dalle frasi solo se è chiaro (es. si presenta). Le altre voci sono di altre persone: se in un loro campione il riquadro evidenziato è quello di chi registra, lascia vuoto il nome di quel campione. Una voce indicata come **persona nella stanza di chi registra** si sente dal suo stesso microfono: è un'altra persona, non chi registra, e non ha campioni: ricava il nome dalle frasi solo se è chiaro (es. qualcuno la chiama per nome e lei risponde), altrimenti lascialo vuoto.
+
 Voci e campioni:
 {voci}
 

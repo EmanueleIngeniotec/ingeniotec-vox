@@ -92,15 +92,24 @@ ATTRIBUZIONE_VOCI = (
 ATTRIBUZIONE_TESTO = "Se non è chiaro chi parla, non includere il contributo."
 
 
-def voice_list(diar: dict, evid: dict, segments: list[dict]) -> str:
+def voice_list(diar: dict, evid: dict, segments: list[dict], recorder: str = "") -> str:
     """Descrizione delle voci per il prompt `nomi`: tempo, foglio dei campioni, frasi d'esempio."""
     lines = []
     for v in diar["voci"]:
-        if v["secondi"] < diarize.MIN_VOICE:
+        if v.get("chi_registra"):
+            sheet = ("**voce di chi registra** (dal microfono locale, nessun campione"
+                     + (f"; chi registra è {recorder}" if recorder else "")
+                     + ("; scelta incerta tra le voci del microfono"
+                        if diar.get("microfono", {}).get("incerta") else "") + ")")
+        elif v.get("microfono"):
+            sheet = ("**persona nella stanza di chi registra** (dal suo microfono, non è chi registra; "
+                     "nessun campione)")
+        elif v["secondi"] < diarize.MIN_VOICE:
             continue
-        ev = evid.get(v["id"], {})
-        sheet = (f"foglio `voci_fogli/{ev['foglio']}` con {len(ev['campioni'])} campioni"
-                 if ev.get("foglio") else "nessun campione con riquadro evidenziato")
+        else:
+            ev = evid.get(v["id"], {})
+            sheet = (f"foglio `voci_fogli/{ev['foglio']}` con {len(ev['campioni'])} campioni"
+                     if ev.get("foglio") else "nessun campione con riquadro evidenziato")
         own = [s for s, d in zip(segments, diar["segmenti"]) if d["voce"] == v["id"]]
         longest = sorted(own, key=lambda s: s["end"] - s["start"], reverse=True)[:4]
         frasi = "; ".join(f"«{s['text'][:160]}» ({frames.hms(s['start'])})"
@@ -110,7 +119,7 @@ def voice_list(diar: dict, evid: dict, segments: list[dict]) -> str:
 
 
 def voices_and_names(job: Job, prof: Profile, video: Path, tr: dict, part: dict, context: str,
-                     names: str, frame_list: str) -> float | None:
+                     names: str, frame_list: str, recorder: str = "") -> float | None:
     """Fasi voci e nomi. Scrive `persona` in ogni segmento di `tr`; restituisce la quota del
     parlato attribuita (None se le voci non si possono separare su questo PC)."""
     if not diarize.available():
@@ -127,13 +136,34 @@ def voices_and_names(job: Job, prof: Profile, video: Path, tr: dict, part: dict,
             if f - last["f"] >= 0.25:
                 last["f"] = f
                 job.log(f"  impronte delle voci {f:.0%}")
-        res, emb = diarize.diarize(video, tr["segments"], progress=prog)
+        saved = diarize.load_print(recorder) if recorder else None
+        res, emb = diarize.diarize(video, tr["segments"], progress=prog, saved_print=saved)
         np.save(job.path("voci_impronte.npy"), emb)
+        mic = res["microfono"]
+        if recorder and mic.get("chi_registra") and not mic.get("incerta"):
+            vec = diarize.voice_print(res, emb, mic["chi_registra"])
+            if vec is not None:
+                mic["impronta_aggiornata"] = diarize.save_print(recorder, vec)
         return res
 
     voci = job.step("voci.json", "Separazione delle voci", do_voci)
     big = [v for v in voci["voci"] if v["secondi"] >= diarize.MIN_VOICE]
     job.log(f"  {len(big)} voci: " + ", ".join(f"{v['id']} {v['secondi'] / 60:.1f} min" for v in big))
+    mic = voci.get("microfono") or {}
+    if mic.get("usata"):
+        room = [v for v in voci["voci"] if v.get("microfono")]
+        job.log(f"  traccia del microfono: {mic['quota']:.0%} del parlato, voci "
+                + ", ".join(f"{v['id']} {v['secondi'] / 60:.1f} min {v['livello_db']:.0f} dB" for v in room))
+        job.log(f"  chi registra (traccia del microfono): {mic.get('chi_registra', '–')}, "
+                f"{mic.get('scelta', '')}" + (" – INCERTO, controlla con «Correggi nomi»"
+                                              if mic.get("incerta") else ""))
+        if mic.get("impronta_aggiornata"):
+            job.log(f"  impronta di {recorder} aggiornata ({mic['impronta_aggiornata']} call)")
+    elif mic.get("motivo"):
+        job.log(f"  traccia del microfono: {mic['motivo']}")
+    elif mic:
+        job.log("  una sola traccia audio: chi registra non si distingue dagli altri "
+                "(in OBS registra il microfono anche sulla traccia 2, vedi la guida)")
     riq = job.step("riquadri.json", "Riquadri evidenziati nel video",
                    lambda: diarize.scan_highlights(video))
     evid = job.step("evidenze.json", "Campioni delle voci",
@@ -142,16 +172,16 @@ def voices_and_names(job: Job, prof: Profile, video: Path, tr: dict, part: dict,
     def do_nomi():
         answer = ask(job, prof, "nomi", "nomi", {
             "contesto": context, "partecipanti": names, "video": part["descrizione_video"],
-            "voci": voice_list(voci, evid, tr["segments"]), "fotogrammi": frame_list},
+            "voci": voice_list(voci, evid, tr["segments"], recorder), "fotogrammi": frame_list},
             tools=["Read"])
         p = job.path("voci_impronte.npy")
         emb = np.load(p) if p.is_file() else np.zeros((0, 1), np.float32)
-        res = diarize.resolve_names(voci, emb, evid, answer, len(tr["segments"]))
+        res = diarize.resolve_names(voci, emb, evid, answer, len(tr["segments"]), recorder)
         return {**res, "risposta": answer}
 
     nomi = job.step("nomi.json", "Nomi delle voci", do_nomi)
     for vid, info in nomi["voci"].items():
-        if info["secondi"] >= diarize.MIN_VOICE:
+        if info["secondi"] >= diarize.MIN_VOICE or info.get("stanza"):
             acc = f", campioni concordi {info['accordo']:.0%}" if "accordo" in info else ""
             job.log(f"  {vid}: {info['nome'] or 'non identificata'} ({info['modo']}{acc})")
     job.log(f"  parlato attribuito: {nomi['copertura']:.0%} · "
@@ -203,16 +233,17 @@ def ask(job: Job, prof: Profile, step: str, label: str, values: dict,
 
 def run(video: Path, out_root: Path, nome: str | None = None, *, with_transcript: bool = False,
         max_shots: int = 12, block_minutes: float = 20, workers: int = 3,
-        model: str | None = None, redo: str | None = None, echo=print) -> list[Path]:
+        model: str | None = None, redo: str | None = None, recorder: str = "",
+        echo=print) -> list[Path]:
     video = Path(video).resolve()
     job = Job(Path(out_root) / (nome or default_name(video)), echo=echo, steps=STEPS)
     if redo:
         reset_from(job, redo)
     job.record(tipo="call", video=str(video), esito="in corso", aggiornato=now(),
                opzioni={"trascrizione": with_transcript, "max_schermate": max_shots,
-                        "blocco_min": block_minutes})
+                        "blocco_min": block_minutes, "chi_registra": recorder})
     return guarded(job, lambda: _run(job, video, with_transcript, max_shots, block_minutes,
-                                     workers, model))
+                                     workers, model, recorder.strip()))
 
 
 def now() -> str:
@@ -253,7 +284,7 @@ def retire_old(job: Job, new: list[Path]) -> None:
 
 
 def _run(job: Job, video: Path, with_transcript: bool, max_shots: int, block_minutes: float,
-         workers: int, model: str | None) -> list[Path]:
+         workers: int, model: str | None, recorder: str = "") -> list[Path]:
     job.log(f"Report di call da {video}")
     meta = call_meta(video)
     prof = Profile("call_report")
@@ -285,13 +316,16 @@ def _run(job: Job, video: Path, with_transcript: bool, max_shots: int, block_min
                     lambda: ask(job, prof, "partecipanti", "partecipanti",
                                 {"fotogrammi": frame_list}, tools=["Read"]))
     meta["piattaforma"] = part["piattaforma"]
-    names = ", ".join(p["nome"] for p in part["partecipanti"]) or "non rilevati"
+    people = [p["nome"] for p in part["partecipanti"]]
+    if recorder and recorder.casefold() not in {n.casefold() for n in people}:
+        people.append(recorder)
+    names = ", ".join(people) or "non rilevati"
     context = (f"registrazione «{video.name}» del {meta['data']} ore {meta['ora']}, durata "
                f"{call_report.duration_text(meta['durata'])}, {part['piattaforma'] or 'piattaforma non nota'}"
                + (f", finestra «{part['titolo_finestra']}»" if part["titolo_finestra"] else ""))
 
     # 4. voci e nomi (chi parla in ogni segmento)
-    copertura = voices_and_names(job, prof, video, tr, part, context, names, frame_list)
+    copertura = voices_and_names(job, prof, video, tr, part, context, names, frame_list, recorder)
     attribuzione = ATTRIBUZIONE_TESTO if copertura is None else ATTRIBUZIONE_VOCI
 
     # 5. estratto di ogni blocco (in parallelo, checkpoint per blocco)

@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--max-schermate", type=int, default=12, help="schermate massime nell'allegato")
     c.add_argument("--blocco-min", type=float, default=20, help="minuti di trascrizione per richiesta")
     c.add_argument("--model", help="cartella del modello faster-whisper")
+    c.add_argument("--chi-registra", default="",
+                   help="nome di chi registra (la sua voce si riconosce dalla traccia 2 del microfono)")
     c.add_argument("--rifai", choices=list(pipeline_call.STEPS),
                    help="rifà il lavoro da questa fase in poi (le precedenti restano)")
     l = sub.add_parser("lezione", help="dispensa e scheda di ripasso di una lezione")
@@ -81,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             files = pipeline_call.run(a.video, a.out, a.nome, with_transcript=a.trascrizione,
                                       max_shots=a.max_schermate, block_minutes=a.blocco_min,
-                                      model=a.model, redo=a.rifai)
+                                      model=a.model, redo=a.rifai, recorder=a.chi_registra)
     except claude.ClaudeLimitError as exc:
         return _fail(ERR_LIMITE, "limite", str(exc), crediti=exc.credits)
     except claude.ClaudeError as exc:

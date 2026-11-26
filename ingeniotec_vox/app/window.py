@@ -312,6 +312,12 @@ class MainWindow(QMainWindow):
         form.addRow("Registrazione:", self.video)
 
         # opzioni call
+        self.recorder = QLineEdit(self.settings.value("chi_registra", ""))
+        self.recorder.setPlaceholderText("Il tuo nome come appare in Teams")
+        self.recorder.setToolTip("La tua voce si riconosce dalla traccia del microfono "
+                                 "(registrazione OBS con 2 tracce audio, vedi la guida).")
+        self.recorder_label = QLabel("Chi registra:")
+        form.addRow(self.recorder_label, self.recorder)
         self.call_opts = QWidget()
         cl = QHBoxLayout(self.call_opts)
         cl.setContentsMargins(0, 0, 0, 0)
@@ -394,6 +400,8 @@ class MainWindow(QMainWindow):
     def _mode_changed(self) -> None:
         call = self.rb_call.isChecked()
         self.call_opts.setVisible(call)
+        self.recorder.setVisible(call)
+        self.recorder_label.setVisible(call)
         self.lesson_opts.setVisible(not call)
         exam = self.profile.currentData() == "esame"
         self.guide.setVisible(exam)
@@ -548,7 +556,8 @@ class MainWindow(QMainWindow):
         if self.rb_call.isChecked():
             name = pipeline_call.default_name(video)
             rec = {"tipo": "call", "video": str(video),
-                   "opzioni": {"trascrizione": self.cb_transcript.isChecked()}}
+                   "opzioni": {"trascrizione": self.cb_transcript.isChecked(),
+                               "chi_registra": self.recorder.text().strip()}}
         else:
             n = self.number.value() or None
             name = f"L{n}_{meta['iso']}" if n else f"Lezione_{meta['iso']}"
@@ -565,6 +574,7 @@ class MainWindow(QMainWindow):
         d, rec = self._new_record()
         self.settings.setValue("modo", "call" if self.rb_call.isChecked() else "lezione")
         self.settings.setValue("corso", self.course.text().strip())
+        self.settings.setValue("chi_registra", self.recorder.text().strip())
         self.settings.setValue("profilo_idx", self.profile.currentIndex())
         self.settings.setValue("guida", self.guide.text())
         redo = None

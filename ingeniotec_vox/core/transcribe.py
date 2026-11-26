@@ -33,8 +33,16 @@ def resolve_model(explicit: str | None = None) -> str:
     return MODEL_NAME
 
 
-def decode_audio(path: Path, max_seconds: float | None = None) -> "np.ndarray":
-    """Prima traccia audio del file → mono float32 a 16 kHz.
+def audio_tracks(path: Path) -> int:
+    """Numero di tracce audio del file."""
+    import av
+
+    with av.open(str(path)) as container:
+        return len(container.streams.audio)
+
+
+def decode_audio(path: Path, max_seconds: float | None = None, track: int = 0) -> "np.ndarray":
+    """Traccia audio `track` del file (predefinita la prima) → mono float32 a 16 kHz.
 
     Sostituisce `faster_whisper.audio.decode_audio`, che con PyAV 19 non funziona
     (parametro `metadata_errors` rimosso).
@@ -56,7 +64,7 @@ def decode_audio(path: Path, max_seconds: float | None = None) -> "np.ndarray":
                 continue
 
     with av.open(str(path)) as container:
-        stream = container.streams.audio[0]
+        stream = container.streams.audio[track]
         for frame in packets_frames(container, stream):
             for out in resampler.resample(frame):
                 arr = out.to_ndarray().reshape(-1)

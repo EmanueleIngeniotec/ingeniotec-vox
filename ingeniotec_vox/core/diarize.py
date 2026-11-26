@@ -5,6 +5,17 @@
    e i pezzi si raggruppano per somiglianza (clustering agglomerativo). Ogni segmento di
    Whisper riceve la voce che copre più tempo al suo interno. Le voci sono V1, V2, …
    in ordine di tempo parlato.
+   **Chi registra**: il suo riquadro in Teams non viene evidenziato in modo riconoscibile
+   (riquadro piccolo con le iniziali), quindi dal video non si può riconoscere. Se la
+   registrazione ha una seconda traccia audio con il solo microfono (OBS: traccia 1 = tutto,
+   traccia 2 = microfono), i pezzi in cui l'energia viene soprattutto dal microfono sono
+   di persone nella stanza di chi registra (`microfono: true`) e si raggruppano a parte.
+   Le voci del microfono non hanno campioni video (quando parlano, Teams evidenzia il riquadro
+   di chi registra, che non si riconosce); i frammenti brevi vanno alla voce grande del
+   microfono più simile. Tra queste voci, chi registra (`chi_registra: true`) è la più
+   forte nel microfono (è la più vicina) e, se c'è un'impronta salvata dalle call precedenti
+   (`impronte.json` in `%LOCALAPPDATA%\\Ingeniotec Vox`), la più simile a quella. Se i due
+   indizi non bastano o non concordano, la scelta è segnata come incerta.
 2. **Riquadro evidenziato** (`scan_highlights`, `evidence`): sui fotogrammi chiave del video
    si cerca il bordo con cui Teams evidenzia chi parla; per ogni voce si raccolgono
    i riquadri evidenziati mentre parla solo lei e si compone un foglio per Claude,
@@ -18,7 +29,7 @@ import os
 import sys
 from pathlib import Path
 
-from .transcribe import SAMPLE_RATE, decode_audio
+from .transcribe import SAMPLE_RATE, audio_tracks, decode_audio
 
 MODEL_DIRNAME = "diarizzazione"
 EMBEDDING_MODEL = "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
@@ -28,6 +39,13 @@ MIN_UNIT = 1.0          # pezzi più corti si allargano attorno al centro
 THRESHOLD = 0.60        # somiglianza (coseno) minima per unire due gruppi
 MIN_VOICE = 8.0         # secondi: sotto, una voce si unisce alla più simile …
 MERGE_SMALL = 0.35      # … se la somiglianza è almeno questa, altrimenti resta a sé
+MIC_SHARE = 0.5         # quota dell'energia di un pezzo che viene dal microfono: da qui parla chi registra
+MIC_MAX = 0.9           # se il microfono domina quasi tutto il parlato, la traccia 2 non è il solo microfono
+LOUD_GAP = 4.0          # dB: di tanto chi registra deve superare gli altri nel microfono per essere certo
+PRINT_MIN = 0.40        # somiglianza minima con l'impronta salvata di chi registra …
+PRINT_MARGIN = 0.10     # … e vantaggio sulla seconda voce per contare
+PRINT_FILE = "impronte.json"
+PRINT_KEEP = 10         # l'impronta salvata è la media delle ultime ~10 call
 
 # colori del bordo di chi parla (RGB) e tolleranza per canale
 HIGHLIGHT_COLORS = [(127, 132, 245)]   # Microsoft Teams (nuovo Teams, tema scuro e chiaro)
@@ -95,6 +113,142 @@ def _embeddings(samples, units, threads: int, progress=None):
     return e / np.maximum(np.linalg.norm(e, axis=1, keepdims=True), 1e-9)
 
 
+def _frame_energy(x, hop: int):
+    import numpy as np
+
+    n = len(x) // hop
+    return (x[:n * hop].astype(np.float64).reshape(n, hop) ** 2).sum(axis=1)
+
+
+def _unit_energy(x, units, hop: int = 160):
+    """Energia e numero di campioni di `x` dentro ogni pezzo."""
+    import numpy as np
+
+    cum = np.concatenate([[0.0], np.cumsum(_frame_energy(x, hop))])
+    n = len(cum) - 1
+    e, length = [], []
+    for _, u0, u1 in units:
+        a = min(max(0, int(u0 * SAMPLE_RATE / hop)), n)
+        b = min(max(a, int(u1 * SAMPLE_RATE / hop)), n)
+        e.append(cum[b] - cum[a])
+        length.append((b - a) * hop)
+    return np.array(e), np.array(length)
+
+
+def mic_shares(mix, mic, units, hop: int = 160):
+    """Per ogni pezzo, quota dell'energia della traccia completa (`mix`) che viene dalla
+    traccia del solo microfono (`mic`): ~1 se parla chi è nella stanza, ~0 se parlano gli altri."""
+    import numpy as np
+
+    e_mix, _ = _unit_energy(mix, units, hop)
+    e_mic, _ = _unit_energy(mic, units, hop)
+    return np.where(e_mix > 1e-9, np.minimum(e_mic / np.maximum(e_mix, 1e-9), 2.0), 0.0)
+
+
+def mic_levels(mic, units, hop: int = 160):
+    """Livello (dBFS) di ogni pezzo nella traccia del microfono."""
+    import numpy as np
+
+    e, length = _unit_energy(mic, units, hop)
+    return 10 * np.log10(e / np.maximum(length, 1) + 1e-12)
+
+
+def _centroid(emb, weights):
+    import numpy as np
+
+    c = (emb * weights[:, None]).sum(axis=0)
+    return c / max(float(np.linalg.norm(c)), 1e-9)
+
+
+def pick_recorder(stats: dict, saved=None) -> tuple:
+    """Chi registra tra le voci del microfono. `stats`: {etichetta: {"db", "centro"}},
+    `saved`: impronta salvata di chi registra (o None). Restituisce (etichetta, incerta, motivo)."""
+    labs = list(stats)
+    db = {lab: stats[lab]["db"] for lab in labs}
+    sims = {lab: float(stats[lab]["centro"] @ saved) for lab in labs} if saved is not None else {}
+    if len(labs) == 1:
+        lab = labs[0]
+        if sims and sims[lab] < PRINT_MIN:
+            return lab, True, (f"una sola voce nel microfono, poco simile all'impronta salvata "
+                               f"di chi registra ({sims[lab]:.2f})")
+        return lab, False, "una sola voce nel microfono" + (f" (impronta {sims[lab]:.2f})" if sims else "")
+    loud = sorted(labs, key=db.get, reverse=True)
+    gap = db[loud[0]] - db[loud[1]]
+    loud_ok = gap >= LOUD_GAP
+    why_loud = f"la più forte nel microfono (+{gap:.1f} dB)"
+    if not sims:
+        return loud[0], not loud_ok, why_loud + ("" if loud_ok else ", poco più delle altre")
+    near = sorted(labs, key=sims.get, reverse=True)
+    margin = sims[near[0]] - sims[near[1]]
+    print_ok = sims[near[0]] >= PRINT_MIN and margin >= PRINT_MARGIN
+    why_print = f"la più simile all'impronta salvata ({sims[near[0]]:.2f}, +{margin:.2f})"
+    if near[0] == loud[0]:
+        return loud[0], not (loud_ok or print_ok), f"{why_loud} e {why_print}"
+    if print_ok and not loud_ok:
+        return near[0], False, why_print + f"; volume poco diverso (+{gap:.1f} dB)"
+    if loud_ok and not print_ok:
+        return loud[0], False, why_loud + "; impronta salvata poco indicativa"
+    return loud[0], True, f"{why_loud}, ma l'impronta salvata indica un'altra voce"
+
+
+def voice_print(diar: dict, emb, vid: str):
+    """Impronta media (normalizzata) dei pezzi di una voce."""
+    import numpy as np
+
+    idx = [k for k, p in enumerate(diar["pezzi"]) if p[2] == vid]
+    if not idx or not len(emb):
+        return None
+    w = np.array([diar["pezzi"][k][1] - diar["pezzi"][k][0] for k in idx])
+    return _centroid(emb[idx], w)
+
+
+def _prints_file() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Ingeniotec Vox" / PRINT_FILE
+
+
+def load_print(name: str):
+    """Impronta salvata della voce di `name` (chi registra), o None."""
+    import json
+
+    import numpy as np
+
+    try:
+        data = json.loads(_prints_file().read_text("utf-8"))
+        p = data[name.strip().casefold()]
+        if p.get("modello") == EMBEDDING_MODEL:
+            return np.array(p["impronta"], np.float32)
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return None
+
+
+def save_print(name: str, vec) -> int:
+    """Aggiorna l'impronta di `name` con quella di questa call (media mobile).
+    Restituisce il numero di call su cui è calcolata."""
+    import json
+
+    import numpy as np
+
+    f = _prints_file()
+    try:
+        data = json.loads(f.read_text("utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    key = name.strip().casefold()
+    old = data.get(key, {})
+    n = old.get("chiamate", 0) if old.get("modello") == EMBEDDING_MODEL else 0
+    vec = np.asarray(vec, np.float64)
+    if n:
+        k = min(n, PRINT_KEEP - 1)
+        vec = np.asarray(old["impronta"], np.float64) * k + vec
+        vec /= max(float(np.linalg.norm(vec)), 1e-9)
+    data[key] = {"nome": name.strip(), "modello": EMBEDDING_MODEL, "chiamate": n + 1,
+                 "impronta": [round(float(x), 6) for x in vec]}
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps(data, ensure_ascii=False), "utf-8")
+    return n + 1
+
+
 def _cluster(emb, weights, threshold: float):
     """Agglomerativo: unisce sempre i due gruppi con i centroidi più simili."""
     import numpy as np
@@ -149,8 +303,9 @@ def _by_segment(pezzi: list, n_seg: int, key: int = 2) -> list[dict]:
 
 
 def diarize(audio: Path, segments: list[dict], threshold: float = THRESHOLD,
-            threads: int | None = None, progress=None):
+            threads: int | None = None, progress=None, saved_print=None):
     """Assegna una voce a ogni segmento di Whisper. `audio`: video o audio della call.
+    `saved_print`: impronta salvata di chi registra, aiuta a sceglierlo tra le voci del microfono.
 
     Restituisce (risultato, impronte): il risultato va nel checkpoint `voci.json`,
     le impronte dei pezzi (matrice numpy) servono ad abbinare i nomi.
@@ -159,12 +314,59 @@ def diarize(audio: Path, segments: list[dict], threshold: float = THRESHOLD,
 
     samples = decode_audio(audio)
     units = _units(segments)
+    tracks = audio_tracks(audio)
+    mic_info = {"tracce": tracks, "usata": False}
     if not units:
-        return ({"modello": EMBEDDING_MODEL, "soglia": threshold, "voci": [], "segmenti": [],
-                 "pezzi": []}, np.zeros((0, 1), np.float32))
+        return ({"modello": EMBEDDING_MODEL, "soglia": threshold, "microfono": mic_info, "voci": [],
+                 "segmenti": [], "pezzi": []}, np.zeros((0, 1), np.float32))
     emb = _embeddings(samples, units, threads or min(16, os.cpu_count() or 4), progress)
     weights = np.array([u1 - u0 for _, u0, u1 in units])
-    labels = _cluster(emb, weights, threshold)
+
+    # persone nella stanza di chi registra: pezzi in cui parla soprattutto il microfono (traccia 2)
+    is_mic = np.zeros(len(units), bool)
+    if tracks >= 2:
+        mic = decode_audio(audio, track=1)
+        share = mic_shares(samples, mic, units)
+        level = mic_levels(mic, units)
+        is_mic = share >= MIC_SHARE
+        q = float(weights[is_mic].sum() / weights.sum())
+        mic_info["quota"] = round(q, 3)
+        if q > MIC_MAX:
+            mic_info["motivo"] = ("la traccia 2 non è il solo microfono (contiene quasi tutto il "
+                                  "parlato): ignorata")
+            is_mic[:] = False
+        else:
+            mic_info["usata"] = True
+
+    labels = np.zeros(len(units), int)
+    rest = np.where(~is_mic)[0]
+    if len(rest):
+        labels[rest] = _cluster(emb[rest], weights[rest], threshold)
+    mic_labs: set = set()
+    rec_lab = None
+    mic_idx = np.where(is_mic)[0]
+    if len(mic_idx):
+        base = int(labels[rest].max()) + 1 if len(rest) else 0
+        sub = _cluster(emb[mic_idx], weights[mic_idx], threshold)
+        # frammenti (un «sì», una risata): impronta e livello poco affidabili, nella stanza ci sono
+        # poche persone → vanno alla voce grande del microfono più simile
+        talk_sub = {g: float(weights[mic_idx][sub == g].sum()) for g in set(sub.tolist())}
+        big_sub = [g for g, s in talk_sub.items() if s >= MIN_VOICE]
+        if big_sub:
+            cen = {g: _centroid(emb[mic_idx][sub == g], weights[mic_idx][sub == g]) for g in big_sub}
+            for g in [g for g in talk_sub if g not in big_sub]:
+                c = _centroid(emb[mic_idx][sub == g], weights[mic_idx][sub == g])
+                sub[sub == g] = max(big_sub, key=lambda b: float(cen[b] @ c))
+        else:
+            sub[:] = 0          # poco parlato nel microfono: non si distinguono le persone
+        labels[mic_idx] = base + sub
+        mic_labs = set(labels[mic_idx].tolist())
+        stats = {}
+        for lab in mic_labs:
+            m = mic_idx[labels[mic_idx] == lab]
+            stats[lab] = {"db": float(np.median(level[m])), "centro": _centroid(emb[m], weights[m])}
+        rec_lab, incerta, motivo = pick_recorder(stats, saved_print)
+        mic_info.update(incerta=incerta, scelta=motivo, impronta_salvata=saved_print is not None)
 
     # voci in ordine di tempo parlato
     talk: dict = {}
@@ -181,14 +383,22 @@ def diarize(audio: Path, segments: list[dict], threshold: float = THRESHOLD,
         idx = [i for i, s in enumerate(seg_out) if s["voce"] == name[lab]]
         voci.append({"id": name[lab], "secondi": round(talk[lab], 1), "segmenti": len(idx),
                      "da": segments[idx[0]]["start"] if idx else None,
-                     "a": segments[idx[-1]]["end"] if idx else None})
-    return ({"modello": EMBEDDING_MODEL, "soglia": threshold, "voci": voci, "segmenti": seg_out,
-             "pezzi": pezzi}, emb)
+                     "a": segments[idx[-1]]["end"] if idx else None,
+                     **({"microfono": True, "livello_db": round(stats[lab]["db"], 1)}
+                        if lab in mic_labs else {}),
+                     **({"chi_registra": True} if lab == rec_lab else {})})
+    if rec_lab is not None:
+        mic_info["chi_registra"] = name[rec_lab]
+    return ({"modello": EMBEDDING_MODEL, "soglia": threshold, "microfono": mic_info, "voci": voci,
+             "segmenti": seg_out, "pezzi": pezzi}, emb)
 
 
-def resolve_names(diar: dict, emb, evid: dict, answer: dict, n_seg: int) -> dict:
+def resolve_names(diar: dict, emb, evid: dict, answer: dict, n_seg: int, recorder: str = "") -> dict:
     """Nome di ogni voce e di ogni segmento, dai campioni etichettati da Claude.
 
+    - voce di chi registra (dal microfono): `recorder`, se indicato, altrimenti il nome
+      proposto da Claude se la certezza non è bassa; le altre voci del microfono (persone
+      nella stessa stanza) seguono le regole delle altre voci;
     - voce con un nome in almeno `PURE` dei campioni: tutta la voce prende quel nome;
     - voce mista (due persone con voci simili unite): ogni suo pezzo va alla persona,
       tra quelle viste nei suoi campioni, con l'impronta media più simile (impronte medie
@@ -232,7 +442,15 @@ def resolve_names(diar: dict, emb, evid: dict, answer: dict, n_seg: int) -> dict
         info = {"secondi": v["secondi"], "campioni": len(evid.get(vid, {}).get("campioni", [])),
                 "etichettati": len(names), "motivo": cl.get("motivo", "")}
         idx = [k for k, p in enumerate(pezzi) if p[2] == vid]
-        if names:
+        if v.get("microfono"):
+            info["stanza"] = True
+        if v.get("chi_registra"):
+            guess = cl.get("nome") if cl.get("certezza") in ("alta", "media") else ""
+            info.update(nome=recorder.strip() or guess or "", modo="microfono",
+                        incerta=bool(diar.get("microfono", {}).get("incerta")))
+            for k in idx:
+                piece_name[k] = info["nome"]
+        elif names:
             top = max(set(names), key=names.count)
             share = names.count(top) / len(names)
             info["accordo"] = round(share, 2)
@@ -370,7 +588,8 @@ def evidence(video: Path, diar: dict, scan: list[dict], out_dir: Path,
     import numpy as np
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    by_voice: dict[str, list[dict]] = {v["id"]: [] for v in diar["voci"] if v["secondi"] >= MIN_VOICE}
+    by_voice: dict[str, list[dict]] = {v["id"]: [] for v in diar["voci"]
+                                       if v["secondi"] >= MIN_VOICE and not v.get("microfono")}
     for s in scan:
         if len(s["riquadri"]) != 1:
             continue

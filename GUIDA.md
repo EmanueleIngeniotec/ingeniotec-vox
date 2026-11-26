@@ -40,6 +40,19 @@ I risultati vanno in `Documenti\Ingeniotec Vox\` (si cambia da **Impostazioni �
 
 Tempi indicativi (misurati su questo tipo di PC): una call di 1 ora e mezza circa 20 minuti, una lezione di 3 ore e mezza circa 45–60 minuti.
 
+## Registrare una call con OBS (perché la tua voce abbia il tuo nome)
+Vox dà un nome alle voci guardando quale riquadro di Teams è evidenziato. Il **tuo** riquadro però non si riconosce (è piccolo, spesso con le sole iniziali): senza accorgimenti la tua voce finisce sotto il nome di un altro. Per evitarlo OBS registra il tuo microfono anche su una seconda traccia audio, e Vox riconosce la tua voce da lì. Si imposta una volta sola:
+
+1. OBS → **Impostazioni → Uscita → Registrazione**: in **Qualità della registrazione** scegli una voce diversa da «Uguale alla diretta» (es. **Alta qualità, file di medie dimensioni**); compaiono le caselle **Tracce audio**: spunta **1** e **2**. **OK**.
+2. Nel mixer audio di OBS: ingranaggio (⋮) → **Proprietà audio avanzate**. Nelle colonne **Tracce**:
+   - **Audio del desktop**: solo **1**;
+   - **Mic/Aux** (il tuo microfono): **1** e **2**.
+3. In Vox, nella riga **Chi registra**, scrivi il tuo nome come appare in Teams (resta salvato).
+
+La traccia 1 resta la registrazione completa; la 2 contiene solo il tuo microfono. Nel `vox.log` del lavoro la riga «chi registra (traccia del microfono)» conferma che Vox l'ha usata. Se la traccia 2 contiene anche l'audio del desktop, Vox la ignora e lo scrive nel log.
+
+Se un collega parla nella tua stanza, il tuo microfono sente anche lui: Vox lo tiene come voce a parte («nella stanza, dal microfono»). Tu sei la voce più forte nel microfono (sei il più vicino) e, dalle call successive, quella più simile alla tua voce salvata da Vox. Se i due indizi non bastano, in **Correggi nomi…** la tua voce compare come «chi registra? da controllare»: controlla le frasi e scegli il nome giusto.
+
 ## Problemi comuni
 | Cosa vedi | Cosa fare |
 |---|---|
@@ -50,6 +63,7 @@ Tempi indicativi (misurati su questo tipo di PC): una call di 1 ora e mezza circ
 | Finestra «Limite d'uso di Claude» | L'account ha i crediti a pagamento (uso extra) e Vox si è fermato al 90% del limite per non consumarli. **Aspetta**: riprendi quando il limite si azzera, senza costi. **Continua a pagamento**: il lavoro prosegue subito e la parte oltre il limite viene addebitata sull'account. |
 | Lavoro interrotto (PC spento, errore) | In **Lavori recenti** premi **Riprendi**. **Rifai da capo** solo se il risultato era sbagliato. |
 | Nomi sbagliati nel report di una call | **Correggi nomi…**: scegli il nome giusto per ogni voce, Vox rifà il report. |
+| Quello che hai detto tu è attribuito a un altro | La registrazione ha una sola traccia audio: imposta OBS come in «Registrare una call con OBS». Per le call già registrate usa **Correggi nomi…**. |
 | Errore su Word o sul PDF | Chiudi le finestre di dialogo aperte in Word e premi **Riprendi**. |
 | «Spazio libero insufficiente» | Libera spazio o scegli un'altra cartella dei risultati. |
 | Avviso «È disponibile la versione …» | Prendi il nuovo `setup.exe` dalla cartella di rete aziendale dei programmi e installalo sopra: lavori e impostazioni restano. Il link «Novità» spiega cosa cambia. |
